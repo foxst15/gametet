@@ -38,6 +38,7 @@
 </head>
 <body class="bg-gradient-to-br from-red-900 via-[#5c0a0a] to-red-950 text-yellow-50 h-screen flex flex-col overflow-hidden relative bg-pattern">
     
+    
     <div id="blossoms" class="absolute inset-0 pointer-events-none z-0 overflow-hidden"></div>
 
     <div id="toast-container" class="fixed top-20 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 pointer-events-none w-[90%] md:w-auto items-center"></div>
@@ -360,10 +361,11 @@
             }
 
             if (data.status === 'betting') {
-                const me = currentPlayers[USER_ID];
-                isMyReady = me ? me.isReady : false;
-                
-                toggleLockUI(isMyReady || isSpectator); 
+    isShaking = false; // <-- THÊM DÒNG NÀY ĐỂ RESET TRẠNG THÁI XÓC
+    const me = currentPlayers[USER_ID];
+    isMyReady = me ? me.isReady : false;
+    
+    toggleLockUI(isMyReady || isSpectator);
                 
                 if (isHost) {
                     const everyoneReady = (totalPlayers > 1 && readyCount >= (totalPlayers - 1));
@@ -510,7 +512,12 @@
         }
 
         window.closeResult = () => { ui.modal.classList.add('hidden'); ui.modalContent.classList.add('scale-90'); if (state?.status === 'betting') resetLocalRound(); };
-        function resetLocalRound() { isShaking = false; isMyReady = false; myBets = { nai: 0, bau: 0, ga: 0, ca: 0, cua: 0, tom: 0 }; renderGrid(); }
+        function resetLocalRound() { 
+    isShaking = false; // <-- Đảm bảo dòng này có mặt
+    isMyReady = false; 
+    myBets = { nai: 0, bau: 0, ga: 0, ca: 0, cua: 0, tom: 0 }; 
+    renderGrid(); 
+}
         window.toggleChat = () => {
             isChatOpen = !isChatOpen; ui.chatDrawer.classList.toggle('translate-x-full', !isChatOpen); ui.chatBackdrop.classList.toggle('hidden', !isChatOpen);
             if(isChatOpen) { ui.chatNotify.classList.add('hidden'); setTimeout(() => ui.chatList.scrollTop = ui.chatList.scrollHeight, 300); }
