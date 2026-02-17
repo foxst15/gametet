@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bầu Cua Tết 2026 - Sòng Bài VIP 10 Người</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@500;600;700&display=swap&subset=vietnamese" rel="stylesheet">
+    <style>
+        .font-script { font-family: 'Dancing Script', cursive; }
+        body { font-family: 'Quicksand', sans-serif; }
+        
+        @keyframes shake-hard {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            10% { transform: translate(-5px, -5px) rotate(-5deg); }
+            20% { transform: translate(5px, 5px) rotate(5deg); }
+            30% { transform: translate(-5px, 5px) rotate(-5deg); }
+            40% { transform: translate(5px, -5px) rotate(5deg); }
+            50% { transform: translate(-5px, 0px) rotate(-5deg); }
+            60% { transform: translate(5px, 0px) rotate(5deg); }
+            70% { transform: translate(0px, 5px) rotate(-5deg); }
+            80% { transform: translate(-5px, -5px) rotate(5deg); }
+            90% { transform: translate(5px, 5px) rotate(0deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+        
+        .animate-shake-hard { animation: shake-hard 0.5s infinite linear; }
+        .dice-3d { box-shadow: inset -2px -2px 6px rgba(0,0,0,0.1), 2px 2px 6px rgba(255,255,255,0.7); }
+        .bet-item { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .bg-pattern { background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23fbbf24' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); }
+        
+        .locked-bet { opacity: 0.6; filter: grayscale(0.5); pointer-events: none; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(234, 179, 8, 0.5); border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-red-900 via-[#5c0a0a] to-red-950 text-yellow-50 h-screen flex flex-col overflow-hidden relative bg-pattern">
+    
+    <div id="blossoms" class="absolute inset-0 pointer-events-none z-0 overflow-hidden"></div>
+
+    <div id="toast-container" class="fixed top-20 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 pointer-events-none w-[90%] md:w-auto items-center"></div>
+
+    <header class="h-14 md:h-16 bg-red-950/80 backdrop-blur-md border-b border-yellow-600/50 flex items-center justify-between px-4 z-30 shadow-lg shrink-0">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 md:w-10 md:h-10 bg-yellow-500 rounded-full flex items-center justify-center shadow-lg border-2 border-white">
+                <span class="text-xl">🧧</span>
+            </div>
+            <div>
+                <h1 class="text-lg md:text-xl font-bold text-yellow-400 font-script leading-none">Bầu Cua Tết</h1>
+                <p class="text-[10px] text-yellow-200/80 uppercase tracking-widest truncate max-w-[120px]" id="room-info-display">Đang kết nối sòng...</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-2">
+            <div id="ready-badge" class="hidden px-2 py-1 bg-emerald-900/50 border border-emerald-500/30 rounded-full text-[10px] font-bold text-emerald-300">
+                <span id="ready-text">0/0 Ready</span>
+            </div>
+            <div class="bg-black/40 px-3 py-1.5 rounded-full flex items-center gap-2 border border-yellow-600/30">
+                <i data-lucide="coins" class="text-yellow-400 w-4 h-4"></i>
+                <span id="balance-display" class="font-bold text-yellow-300 font-mono text-sm md:text-base">...</span>
+            </div>
+            <button onclick="toggleChat()" class="relative p-2 bg-yellow-600/20 hover:bg-yellow-600/40 rounded-full border border-yellow-600/40 transition-all">
+                <i data-lucide="message-circle" class="w-5 h-5 text-yellow-200"></i>
+                <span id="chat-notification" class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[10px] flex items-center justify-center font-bold hidden border border-white">!</span>
+            </button>
+        </div>
+    </header>
+
+    <div id="host-monitor" class="hidden h-10 bg-black/30 border-b border-yellow-900/30 backdrop-blur-sm z-20 flex items-center px-4 overflow-x-auto custom-scrollbar gap-3">
+        <span class="text-[10px] font-bold text-yellow-500 uppercase shrink-0">Người chơi:</span>
+        <div id="player-list" class="flex items-center gap-2"></div>
+    </div>
+
+    <main class="flex-1 flex flex-col items-center justify-center p-2 z-10 relative">
+        <div class="relative w-full flex justify-center items-center h-[260px] md:h-[300px]">
+            <div class="absolute bottom-10 w-60 h-60 bg-gray-200 rounded-full border-4 border-gray-300 shadow-2xl flex items-center justify-center z-10" style="transform: rotateX(60deg);">
+                <div class="w-[90%] h-[90%] rounded-full border border-gray-300 bg-gradient-to-br from-white to-gray-100 shadow-inner"></div>
+            </div>
+            <div id="dice-container" class="absolute bottom-24 z-20 flex gap-4 transition-all duration-500 opacity-0 scale-90"></div>
+            <div id="bowl-container" class="absolute bottom-14 z-30 transition-transform duration-700 ease-in-out cursor-pointer group">
+                <div class="w-52 h-52 md:w-56 md:h-56 bg-gradient-to-b from-red-600 to-red-800 rounded-full border-4 border-yellow-500 shadow-[0_15px_40px_rgba(0,0_0,0.6)] flex items-center justify-center relative overflow-hidden">
+                    <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-20"></div>
+                    <div class="w-36 h-36 border-2 border-yellow-400/20 rounded-full flex items-center justify-center">
+                        <span class="text-7xl font-script text-yellow-200 select-none drop-shadow-lg">Tết</span>
+                    </div>
+                </div>
+                <p id="game-status-msg" class="absolute -bottom-10 w-full text-center text-xs font-bold text-yellow-200 animate-pulse bg-black/40 py-1 rounded-full px-4">Đang ổn định chỗ ngồi...</p>
+            </div>
+        </div>
+
+        <div class="w-full max-w-2xl px-2 flex flex-col gap-2">
+            <div class="flex justify-between items-center px-2">
+                <div class="flex flex-col">
+                    <span class="text-[10px] text-yellow-400 uppercase font-bold tracking-tighter">Cược phòng</span>
+                    <span id="room-total-bet" class="font-mono text-white text-sm">0</span>
+                </div>
+                <div class="flex gap-2">
+                    <button id="btn-reset" onclick="resetMyBets()" class="px-3 py-1.5 bg-red-900/40 border border-red-600/50 rounded-lg text-[10px] text-red-200 font-bold hover:bg-red-800/60 transition-all">Làm mới</button>
+                    <button id="btn-ready" onclick="toggleReady()" class="px-5 py-1.5 bg-emerald-600 border border-emerald-400 rounded-lg text-[10px] text-white font-bold uppercase shadow-lg hover:bg-emerald-500 transition-all animate-pulse">Sẵn sàng</button>
+                </div>
+            </div>
+            <div id="betting-grid" class="grid grid-cols-3 gap-3 md:gap-4"></div>
+        </div>
+    </main>
+
+    <div id="chat-drawer" class="fixed inset-y-0 right-0 w-full md:w-80 bg-[#1a0505]/98 border-l border-yellow-600/30 z-[60] transform translate-x-full transition-transform duration-300 flex flex-col shadow-2xl">
+        <div class="h-14 border-b border-yellow-900/50 flex items-center justify-between px-4 bg-red-950">
+            <h3 class="font-bold text-yellow-400 flex items-center gap-2"><i data-lucide="message-square" class="w-4 h-4"></i> Phòng Chat</h3>
+            <button onclick="toggleChat()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <div id="chat-list" class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-black/10"></div>
+        <form id="chat-form" class="p-3 bg-red-950 border-t border-yellow-900/50 flex gap-2">
+            <input type="text" id="chat-input" placeholder="Nhập tin nhắn..." class="flex-1 bg-black/40 border border-yellow-900/50 rounded-xl px-4 py-2 text-sm text-yellow-100 outline-none focus:border-yellow-500 transition-all" autocomplete="off">
+            <button type="submit" class="p-2 bg-yellow-600 rounded-xl text-black shadow-lg"><i data-lucide="send" class="w-5 h-5"></i></button>
+        </form>
+    </div>
+    <div id="chat-backdrop" onclick="toggleChat()" class="fixed inset-0 bg-black/60 z-[55] hidden backdrop-blur-sm"></div>
+
+    <div id="result-modal" class="fixed inset-0 z-[70] bg-black/90 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div id="modal-content" class="bg-gradient-to-b from-red-900 to-red-950 border-2 border-yellow-500 p-8 rounded-[40px] text-center max-w-sm w-full transform scale-90 transition-all duration-300">
+            <i id="modal-icon" data-lucide="sparkles" class="w-16 h-16 text-yellow-400 mx-auto mb-4 animate-bounce"></i>
+            <h2 id="modal-title" class="text-3xl font-bold text-yellow-400 font-script mb-2">Kết quả</h2>
+            <div id="modal-dice" class="flex justify-center gap-2 mb-6"></div>
+            <p id="modal-msg" class="text-emerald-300 text-lg font-bold mb-6">Bạn đã thắng 0đ</p>
+            <button onclick="closeResult()" class="w-full py-4 bg-gradient-to-r from-yellow-600 to-yellow-500 text-red-950 font-bold rounded-2xl shadow-xl hover:brightness-110 active:scale-95 transition-all">TIẾP TỤC QUẨY!</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, setPersistence, inMemoryPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, updateDoc, collection, addDoc, deleteField, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyArKIBD9RWIOhNgPrPLKtPHn1EsQUHjmE8",
+            authDomain: "score-57210.firebaseapp.com",
+            projectId: "score-57210",
+            storageBucket: "score-57210.firebasestorage.app",
+            messagingSenderId: "425618398285",
+            appId: "1:425618398285:web:47eccf49c844df2e865004"
+        };
+
+        const app = initializeApp(firebaseConfig, "BauCuaApp"); 
+        
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'tet-game-hub-2026';
+
+        const params = new URLSearchParams(window.location.search);
+        const ROOM_ID = params.get('room') || 'Global';
+        const ROOM_NAME = decodeURIComponent(params.get('roomName') || ROOM_ID); 
+        const USER_ID = params.get('uid'); 
+        const USER_NAME = decodeURIComponent(params.get('name') || 'Ẩn Danh');
+
+        const ITEMS = [
+            { id: 'nai', name: 'Nai', icon: '🦌' }, { id: 'bau', name: 'Bầu', icon: '🎃' },
+            { id: 'ga', name: 'Gà', icon: '🐔' }, { id: 'ca', name: 'Cá', icon: '🐟' },
+            { id: 'cua', name: 'Cua', icon: '🦀' }, { id: 'tom', name: 'Tôm', icon: '🦐' }
+        ];
+
+        let balance = 0;
+        let myBets = { nai: 0, bau: 0, ga: 0, ca: 0, cua: 0, tom: 0 };
+        let state = null;
+        let isHost = false;
+        let isMyReady = false;
+        let isShaking = false;
+        let isChatOpen = false;
+        let previousPlayers = {}; 
+
+        const ui = {
+            balance: document.getElementById('balance-display'),
+            roomTotal: document.getElementById('room-total-bet'),
+            grid: document.getElementById('betting-grid'),
+            dice: document.getElementById('dice-container'),
+            bowl: document.getElementById('bowl-container'),
+            status: document.getElementById('game-status-msg'),
+            btnReady: document.getElementById('btn-ready'),
+            btnReset: document.getElementById('btn-reset'),
+            readyBadge: document.getElementById('ready-badge'),
+            readyText: document.getElementById('ready-text'),
+            hostMonitor: document.getElementById('host-monitor'),
+            playerList: document.getElementById('player-list'),
+            chatDrawer: document.getElementById('chat-drawer'),
+            chatBackdrop: document.getElementById('chat-backdrop'),
+            chatList: document.getElementById('chat-list'),
+            chatInput: document.getElementById('chat-input'),
+            chatForm: document.getElementById('chat-form'),
+            chatNotify: document.getElementById('chat-notification'),
+            modal: document.getElementById('result-modal'),
+            modalContent: document.getElementById('modal-content'),
+            modalMsg: document.getElementById('modal-msg'),
+            modalTitle: document.getElementById('modal-title'),
+            modalDice: document.getElementById('modal-dice'),
+            modalIcon: document.getElementById('modal-icon'),
+            roomInfo: document.getElementById('room-info-display')
+        };
+
+        window.showToast = (msg, type = 'info') => {
+            const toastContainer = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bgClass = type === 'success' ? 'bg-emerald-600/95' : (type === 'danger' ? 'bg-red-600/95' : 'bg-yellow-600/95');
+            const iconName = type === 'success' ? 'user-check' : (type === 'danger' ? 'user-minus' : 'bell');
+            
+            toast.className = `${bgClass} backdrop-blur-md border border-white/30 text-white px-5 py-2.5 rounded-full font-bold text-xs md:text-sm shadow-xl transform transition-all duration-300 -translate-y-5 opacity-0 flex items-center gap-2 max-w-full truncate`;
+            toast.innerHTML = `<i data-lucide="${iconName}" class="w-4 h-4 shrink-0 text-yellow-200"></i> <span class="truncate">${msg}</span>`;
+            
+            toastContainer.appendChild(toast);
+            lucide.createIcons();
+
+            requestAnimationFrame(() => toast.classList.remove('-translate-y-5', 'opacity-0'));
+            setTimeout(() => {
+                toast.classList.add('-translate-y-5', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        };
+
+        // --- BÉ LÔI ĐÃ FIX: CHUYỂN LOGIC LẤY TIỀN VÀO TRONG startListeners ---
+        async function init() {
+            ui.roomInfo.textContent = `Phòng: ${ROOM_NAME}`;
+            renderGrid();
+            lucide.createIcons();
+
+            // Đăng nhập ẨN DANH để kết nối Database
+            try {
+                await setPersistence(auth, inMemoryPersistence);
+                if (!auth.currentUser) {
+                    await signInAnonymously(auth);
+                }
+            } catch (err) {
+                console.error("Lỗi login ẩn danh:", err);
+            }
+
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    startListeners();
+                }
+            });
+        }
+
+        function startListeners() {
+            if (!USER_ID) {
+                ui.status.textContent = "Chưa nhận diện được Chủ nhân. Hãy vào lại từ Sảnh!";
+                return;
+            }
+
+            // --- BÉ LÔI FIX: LẤY TIỀN KHI ĐÃ ĐĂNG NHẬP THÀNH CÔNG ---
+            if (USER_ID) {
+                const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', USER_ID);
+                onSnapshot(userRef, (snap) => {
+                    if (snap.exists()) {
+                        balance = snap.data().balance || 2026000;
+                        ui.balance.textContent = formatMoney(balance);
+                    } else {
+                        // Nếu chưa có user thì set mặc định 2 triệu
+                        balance = 2026000;
+                        ui.balance.textContent = formatMoney(balance);
+                    }
+                }, (error) => {
+                    // Nếu lỗi permission (do logout/login chưa kịp), ta ignore hoặc log nhẹ
+                    console.log("Đang chờ xác thực ví tiền...");
+                });
+            }
+            // -----------------------------------------------------------
+
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', ROOM_ID);
+            const chatRef = collection(db, 'artifacts', appId, 'public', 'data', 'chats_' + ROOM_ID);
+
+            onSnapshot(roomRef, (snap) => {
+                if (snap.exists()) {
+                    handleUpdate(snap.data());
+                } else {
+                    if (USER_ID) createRoomData(roomRef);
+                }
+            });
+
+            onSnapshot(chatRef, (snap) => {
+                const msgs = snap.docs.map(d => d.data()).sort((a,b) => a.time - b.time);
+                renderChat(msgs);
+            });
+
+            ui.chatForm.onsubmit = async (e) => {
+                e.preventDefault();
+                const text = ui.chatInput.value.trim();
+                if(!text) return;
+                await addDoc(chatRef, { user: USER_NAME, uid: USER_ID, text, time: Date.now() });
+                ui.chatInput.value = '';
+            };
+        }
+
+        async function createRoomData(ref) {
+            const roomData = {
+                hostId: USER_ID, 
+                status: 'betting', 
+                dice: ['nai', 'bau', 'ga'],
+                totalBets: { nai: 0, bau: 0, ga: 0, ca: 0, cua: 0, tom: 0 },
+                players: { [USER_ID]: { name: USER_NAME, isReady: false, time: Date.now() } },
+                max: 10, 
+                time: Date.now()
+            };
+            await setDoc(ref, roomData, { merge: true });
+        }
+
+        function handleUpdate(data) {
+            state = data;
+            const currentPlayers = data.players || {};
+
+            if (data.hostId && !currentPlayers[data.hostId] && Object.keys(currentPlayers).length > 0) {
+                const newHostId = Object.keys(currentPlayers)[0];
+                if (USER_ID === newHostId) {
+                    const ref = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', ROOM_ID);
+                    updateDoc(ref, { hostId: newHostId });
+                }
+            }
+            isHost = data.hostId === USER_ID;
+
+            if (Object.keys(previousPlayers).length > 0) { 
+                for (let uid in currentPlayers) {
+                    if (!previousPlayers[uid] && uid !== USER_ID) window.showToast(`Phát tài phát tài! ${currentPlayers[uid].name} đã vào sòng! 🎉`, 'success');
+                }
+                for (let uid in previousPlayers) {
+                    if (!currentPlayers[uid] && uid !== USER_ID) window.showToast(`Trời ơi... ${previousPlayers[uid].name} lủng túi chuồn mất rồi! 😭`, 'danger');
+                }
+            }
+            previousPlayers = { ...currentPlayers };
+
+            const maxPlayers = data.max || 10;
+            if (USER_ID && !currentPlayers[USER_ID]) {
+                const currentCount = Object.keys(currentPlayers).length;
+                if (currentCount < maxPlayers) {
+                    currentPlayers[USER_ID] = { name: USER_NAME, isReady: false, time: Date.now() };
+                    const ref = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', ROOM_ID);
+                    updateDoc(ref, { [`players.${USER_ID}`]: currentPlayers[USER_ID] });
+                }
+            }
+
+            const playerList = Object.keys(currentPlayers);
+            const readyCount = Object.values(currentPlayers).filter(p => p.isReady).length;
+            const totalPlayers = playerList.length;
+            const isSpectator = !currentPlayers[USER_ID];
+
+            if (isHost) {
+                ui.hostMonitor.classList.remove('hidden');
+                ui.playerList.innerHTML = playerList.map(uid => {
+                    const p = currentPlayers[uid]; if(uid === USER_ID) return '';
+                    return `<div class="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] border ${p.isReady ? 'bg-emerald-900 border-emerald-500 text-emerald-300' : 'bg-gray-800 border-gray-600 text-gray-400'}"><span>${p.name}</span>${p.isReady ? '✅' : '⏳'}</div>`;
+                }).join('');
+                ui.bowl.onclick = startShake;
+            } else {
+                ui.hostMonitor.classList.add('hidden');
+                ui.bowl.onclick = null;
+            }
+
+            if (totalPlayers > 1) {
+                ui.readyBadge.classList.remove('hidden');
+                ui.readyText.textContent = `${readyCount}/${totalPlayers - (isHost ? 1 : 0)} Sẵn sàng`;
+            } else {
+                ui.readyBadge.classList.add('hidden');
+            }
+
+            if (data.status === 'betting') {
+                const me = currentPlayers[USER_ID];
+                isMyReady = me ? me.isReady : false;
+                
+                toggleLockUI(isMyReady || isSpectator); 
+                
+                if (isHost) {
+                    const everyoneReady = (totalPlayers > 1 && readyCount >= (totalPlayers - 1));
+                    ui.status.textContent = everyoneReady ? "Cả làng sẵn sàng rồi! Bấm Bát để xóc!" : "Đợi mọi người cược xong...";
+                } else if (isSpectator) {
+                    ui.status.textContent = `Sòng đã đầy (${maxPlayers}/${maxPlayers})! Chủ nhân xem chùa đi nha 👀`;
+                } else {
+                    ui.status.textContent = isMyReady ? "Đã chốt đơn! Chờ cái xóc..." : "Cược xong nhớ bấm Sẵn sàng nha!";
+                }
+            } else if (data.status === 'shaking' && !isShaking) runShakeAnimation();
+            else if (data.status === 'result' && isShaking) runResultReveal(data.dice);
+
+            let totalRoom = 0;
+            if (data.totalBets) {
+                ITEMS.forEach(item => {
+                    const val = data.totalBets[item.id] || 0;
+                    totalRoom += val;
+                    const b = document.getElementById(`badge-${item.id}`);
+                    if(b) { b.textContent = formatMoney(val); b.classList.toggle('hidden', val === 0); }
+                });
+            }
+            ui.roomTotal.textContent = formatMoney(totalRoom);
+        }
+
+        window.placeBet = async (id) => {
+            if (!USER_ID || state?.status !== 'betting' || isMyReady) return;
+            if (!state?.players?.[USER_ID]) return window.showToast("Chủ nhân đang là khán giả, không thể cược đâu nha! 👀", "danger");
+            if (balance < 10000) return window.showToast("Hết tiền cược rồi chủ nhân ơi!", "danger");
+            
+            balance -= 10000; 
+            myBets[id] += 10000; 
+            ui.balance.textContent = formatMoney(balance); 
+            renderGrid();
+
+            const ref = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', ROOM_ID);
+            
+            try {
+                await updateDoc(ref, {
+                    [`totalBets.${id}`]: increment(10000)
+                });
+            } catch (err) {
+                console.error("Lỗi cược:", err);
+                balance += 10000;
+                myBets[id] -= 10000;
+                ui.balance.textContent = formatMoney(balance);
+                renderGrid();
+            }
+        };
+
+        window.toggleReady = async () => {
+            if (!USER_ID || isHost || state?.status !== 'betting' || isMyReady) return;
+            if (!state?.players?.[USER_ID]) return window.showToast("Chủ nhân xem chùa thì cần gì bấm Sẵn sàng nè! 👀", "danger");
+            
+            const total = Object.values(myBets).reduce((a,b)=>a+b,0);
+            if (total === 0) return window.showToast("Chưa cược sao sẵn sàng được nà? 😝", "danger");
+            
+            isMyReady = true; toggleLockUI(true);
+            const ref = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', ROOM_ID);
+            const up = { [`players.${USER_ID}.isReady`]: true };
+            await updateDoc(ref, up);
+        };
+
+        async function startShake() {
+            if (!USER_ID || !isHost || state?.status !== 'betting') return;
+            const ref = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', ROOM_ID);
+            await updateDoc(ref, { status: 'shaking' });
+            setTimeout(async () => {
+                const rn = () => Math.floor(Math.random() * 6);
+                const dice = [ITEMS[rn()].id, ITEMS[rn()].id, ITEMS[rn()].id];
+                await updateDoc(ref, { status: 'result', dice });
+            }, 2000);
+        }
+
+        function runShakeAnimation() {
+            isShaking = true; ui.bowl.classList.add('animate-shake-hard'); ui.dice.classList.add('opacity-0');
+            ui.bowl.style.transform = 'translateY(0)'; ui.status.textContent = "Á á rung quá rung quá!!!";
+            toggleLockUI(true); 
+        }
+
+        function runResultReveal(diceIds) {
+            ui.bowl.classList.remove('animate-shake-hard');
+            ui.dice.innerHTML = diceIds.map(id => {
+                const item = ITEMS.find(i => i.id === id);
+                return `<div class="dice-3d w-12 h-12 bg-white rounded-xl flex items-center justify-center text-3xl shadow-lg border border-gray-200 text-red-600">${item.icon}</div>`;
+            }).join('');
+            setTimeout(() => {
+                ui.bowl.style.transform = 'translateY(-120px)'; ui.dice.classList.remove('opacity-0'); 
+                calculateMoney(diceIds);
+                if (isHost) {
+                    setTimeout(async () => {
+                        const ref = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', ROOM_ID);
+                        const players = state.players || {}; const resets = {};
+                        Object.keys(players).forEach(uid => resets[`players.${uid}.isReady`] = false);
+                        await updateDoc(ref, { status: 'betting', totalBets: { nai:0, bau:0, ga:0, ca:0, cua:0, tom:0 }, ...resets });
+                    }, 8000);
+                }
+            }, 500);
+        }
+
+        async function calculateMoney(results) {
+            if (!state?.players?.[USER_ID]) return; 
+
+            let win = 0; 
+            const totalBet = Object.values(myBets).reduce((a,b)=>a+b,0);
+            const counts = {}; results.forEach(id => counts[id] = (counts[id] || 0) + 1);
+            
+            for (let id in myBets) { 
+                if (myBets[id] > 0 && counts[id]) {
+                    win += myBets[id] + (myBets[id] * counts[id]); 
+                }
+            }
+            
+            if (totalBet > 0) { 
+                balance += win; 
+                ui.balance.textContent = formatMoney(balance); 
+                
+                const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', USER_ID);
+                try {
+                    await setDoc(userRef, { balance: balance }, { merge: true });
+                } catch (err) {
+                    console.error("Lỗi lưu tiền:", err);
+                }
+
+                showModal(win, totalBet, results); 
+            }
+            else {
+                showModal(0, 0, results);
+            }
+        }
+
+        function toggleLockUI(locked) { 
+            ui.grid.classList.toggle('locked-bet', locked); 
+            ui.btnReady.classList.toggle('hidden', locked); 
+            ui.btnReset.classList.toggle('hidden', locked); 
+        }
+        
+        function showModal(win, total, results) {
+            ui.modalDice.innerHTML = results.map(id => { const item = ITEMS.find(i => i.id === id); return `<div class="w-12 h-12 bg-white rounded-lg flex items-center justify-center text-2xl shadow border border-gray-300">${item.icon}</div>`; });
+            ui.modal.classList.remove('hidden'); setTimeout(() => ui.modalContent.classList.remove('scale-90'), 50);
+            if (total === 0) { ui.modalTitle.textContent = "Kết quả"; ui.modalMsg.textContent = "Chủ nhân ngồi xem thôi à? 🙄"; ui.modalIcon.setAttribute('data-lucide', 'eye'); }
+            else if (win > total) { ui.modalTitle.textContent = "Thắng Lớn! 🎉"; ui.modalMsg.innerHTML = `Lãi to: <span class="text-2xl text-yellow-300">+${formatMoney(win - total)}</span>`; ui.modalIcon.setAttribute('data-lucide', 'party-popper'); confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } }); }
+            else { ui.modalTitle.textContent = "Thua rồi!"; ui.modalMsg.innerHTML = win > 0 ? `Thu về: ${formatMoney(win)}` : `Mất trắng -${formatMoney(total)} 😭`; ui.modalIcon.setAttribute('data-lucide', 'cloud-rain'); }
+            lucide.createIcons();
+        }
+
+        window.closeResult = () => { ui.modal.classList.add('hidden'); ui.modalContent.classList.add('scale-90'); if (state?.status === 'betting') resetLocalRound(); };
+        function resetLocalRound() { isShaking = false; isMyReady = false; myBets = { nai: 0, bau: 0, ga: 0, ca: 0, cua: 0, tom: 0 }; renderGrid(); }
+        window.toggleChat = () => {
+            isChatOpen = !isChatOpen; ui.chatDrawer.classList.toggle('translate-x-full', !isChatOpen); ui.chatBackdrop.classList.toggle('hidden', !isChatOpen);
+            if(isChatOpen) { ui.chatNotify.classList.add('hidden'); setTimeout(() => ui.chatList.scrollTop = ui.chatList.scrollHeight, 300); }
+        };
+
+        function renderChat(msgs) {
+            ui.chatList.innerHTML = msgs.map(m => {
+                const isMe = m.uid === USER_ID;
+                return `<div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} animate-fade-in"><div class="max-w-[85%]">${!isMe ? `<div class="text-[9px] text-gray-400 mb-0.5 ml-1">${m.user}</div>` : ''}<div class="px-3 py-2 rounded-2xl text-xs break-words ${isMe ? 'bg-yellow-600 text-white rounded-tr-none' : 'bg-gray-800 text-gray-200 rounded-tl-none border border-gray-700'}">${m.text}</div></div></div>`;
+            }).join('');
+            if(isChatOpen) ui.chatList.scrollTop = ui.chatList.scrollHeight;
+            else if (msgs.length > 0) ui.chatNotify.classList.remove('hidden');
+        }
+
+        window.resetMyBets = async () => {
+            if (!USER_ID || state?.status !== 'betting' || isMyReady) return;
+            if (!state?.players?.[USER_ID]) return;
+            
+            const totalBet = Object.values(myBets).reduce((a, b) => a + b, 0);
+            if (totalBet === 0) return;
+            
+            const ref = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', ROOM_ID);
+            
+            const updates = {};
+            ITEMS.forEach(item => {
+                if (myBets[item.id] > 0) {
+                   updates[`totalBets.${item.id}`] = increment(-myBets[item.id]);
+                }
+            });
+
+            try {
+                if(Object.keys(updates).length > 0) {
+                     await updateDoc(ref, updates);
+                }
+            } catch(err) {
+                 console.error("Lỗi reset:", err);
+            }
+
+            balance += totalBet; 
+            myBets = { nai: 0, bau: 0, ga: 0, ca: 0, cua: 0, tom: 0 };
+            ui.balance.textContent = formatMoney(balance);
+            renderGrid();
+        };
+
+        function formatMoney(n) { return n.toLocaleString('vi-VN') + 'đ'; }
+        function renderGrid() {
+            ui.grid.innerHTML = ITEMS.map(item => `
+                <div class="bet-item relative group cursor-pointer" onclick="placeBet('${item.id}')">
+                    <div class="bg-red-950/40 backdrop-blur-sm border-2 ${myBets[item.id] > 0 ? 'border-yellow-400 bg-red-800/60' : 'border-yellow-700/30'} rounded-2xl p-2 md:p-4 flex flex-col items-center shadow-lg h-24 md:h-32 justify-center transition-all">
+                        <span class="text-4xl md:text-6xl filter drop-shadow-md group-hover:scale-110 transition-transform">${item.icon}</span>
+                        <span class="text-xs md:text-[11px] font-bold text-yellow-100/60 uppercase mt-1">${item.name}</span>
+                        ${myBets[item.id] > 0 ? `<div class="absolute -top-1 -right-1 bg-yellow-500 text-red-900 font-bold px-2 py-0.5 rounded-full text-[9px] shadow-lg animate-bounce border border-white">${formatMoney(myBets[item.id])}</div>` : ''}
+                        <div id="badge-${item.id}" class="absolute bottom-1 right-1 bg-black/60 text-emerald-400 text-[8px] px-1.5 rounded-full hidden">0</div>
+                    </div>
+                </div>`).join('');
+        }
+
+        function createBlossom() {
+            const b = document.createElement('div'); b.innerText = Math.random() > 0.5 ? '🌸' : '🌼';
+            b.className = 'absolute text-sm opacity-60 pointer-events-none transition-all duration-10000 linear';
+            b.style.left = Math.random() * 100 + 'vw'; b.style.top = '-20px';
+            document.getElementById('blossoms').appendChild(b);
+            setTimeout(() => { b.style.top = '110vh'; b.style.transform = `rotate(${Math.random()*360}deg) translateX(${Math.random()*50}px)`; }, 100);
+            setTimeout(() => b.remove(), 10000);
+        }
+        setInterval(createBlossom, 1000);
+        init();
+    </script>
+</body>
+</html>

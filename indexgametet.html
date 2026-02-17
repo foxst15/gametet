@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tết Game Hub 2026 </title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@500;600;700;800&display=swap&subset=vietnamese" rel="stylesheet">
+
+    <style>
+        :root {
+            --tet-red-deep: #2d0505;
+            --tet-red-paper: #6a0404;
+            --tet-gold-main: #fbbf24;
+            --tet-gold-light: #fffbeb;
+        }
+
+        .font-script { font-family: 'Dancing Script', cursive; }
+        body { 
+            font-family: 'Quicksand', sans-serif; 
+            background-color: var(--tet-red-deep);
+            color: var(--tet-gold-light);
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        .tet-bg {
+            background: radial-gradient(circle at center, var(--tet-red-paper) 0%, var(--tet-red-deep) 100%);
+            background-image: url('https://www.transparenttextures.com/patterns/pinstriped-suit.png'); 
+            min-height: 100vh;
+        }
+
+        /* Rank Style Siêu Nét cho FoxST soi Tú Thợ Điện */
+        .rank-gold { background: linear-gradient(90deg, #ffcc00 0%, #f59e0b 100%); color: #4a0404 !important; border: 2px solid #ffffff; box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4); }
+        .rank-silver { background: linear-gradient(90deg, #e2e8f0 0%, #94a3b8 100%); color: #0f172a !important; border: 2px solid #ffffff; }
+        .rank-bronze { background: linear-gradient(90deg, #fdba74 0%, #c2410c 100%); color: #450a0a !important; border: 2px solid #ffffff; }
+
+        .rank-name-font { font-family: 'Quicksand', sans-serif !important; font-weight: 800 !important; text-transform: uppercase; }
+
+        .hidden-force { display: none !important; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--tet-gold-main); border-radius: 10px; }
+
+        @keyframes blossomDrop {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
+            15% { opacity: 0.9; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+        }
+        .blossom { position: absolute; pointer-events: none; z-index: 50; animation: blossomDrop linear infinite; }
+    </style>
+</head>
+<body class="tet-bg h-screen relative">
+
+    <div id="blossom-container" class="fixed inset-0 pointer-events-none overflow-hidden"></div>
+
+    <div id="loading-screen" class="fixed inset-0 z-[100] bg-[#2d0505] flex items-center justify-center flex-col gap-6">
+        <div class="text-7xl md:text-8xl animate-bounce">🧧</div>
+        <div class="text-yellow-400 font-bold text-2xl md:text-3xl animate-pulse font-script text-center px-4"> Đang tổng hợp sòng bài...</div>
+    </div>
+
+    <div id="login-screen" class="fixed inset-0 z-40 bg-[#1a0505] flex flex-col items-center justify-center hidden-force">
+        <div class="z-10 bg-red-900/95 p-10 md:p-14 rounded-[3rem] border-4 border-yellow-500 shadow-2xl text-center max-w-sm w-full mx-4">
+            <h1 class="text-4xl md:text-5xl font-bold text-yellow-400 font-script mb-4">Tết Game Hub</h1>
+            <p class="text-white mb-10 italic text-sm md:text-lg font-semibold">Chào sếp ❤️</p>
+            <button id="btn-login-google" class="w-full bg-yellow-400 text-red-950 font-black py-4 rounded-2xl flex items-center justify-center gap-3 transform active:scale-95 shadow-lg text-lg">
+              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-7 h-7">
+              <span>VÀO SÒNG NGAY</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="app-container" class="flex h-screen relative hidden-force">
+        <aside class="w-16 md:w-72 flex flex-col p-2 md:p-6 z-20 shrink-0 border-r-2 border-yellow-500/20 bg-red-950/90 md:bg-red-950/40">
+            <div class="flex items-center gap-4 mb-10 px-1 mt-4 cursor-pointer hidden md:flex" onclick="switchTab('home')">
+                <div class="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center text-yellow-300 border-2 border-yellow-400 shadow-lg">
+                    <span class="text-2xl animate-pulse">🧧</span>
+                </div>
+                <h1 class="text-2xl font-bold text-yellow-400 font-script tracking-widest text-left">Tết Hub</h1>
+            </div>
+
+            <nav class="flex-1 space-y-6 md:space-y-4">
+                <button onclick="switchTab('home')" class="w-full p-3 md:p-4 flex items-center justify-center md:justify-start gap-4 rounded-xl text-yellow-100 hover:bg-red-800 transition-all" id="nav-home">
+                    <i data-lucide="gamepad-2" class="w-6 h-6 md:w-7 md:h-7"></i><span class="font-bold hidden md:block text-base">Sảnh Game</span>
+                </button>
+                <button onclick="switchTab('rank')" class="w-full p-3 md:p-4 flex items-center justify-center md:justify-start gap-4 rounded-xl text-yellow-100 hover:bg-red-800 transition-all" id="nav-rank">
+                    <i data-lucide="trophy" class="w-6 h-6 md:w-7 md:h-7"></i><span class="font-bold hidden md:block text-base">Bảng Vàng</span>
+                </button>
+                <button onclick="switchTab('friends')" class="w-full p-3 md:p-4 flex items-center justify-center md:justify-start gap-4 rounded-xl text-yellow-100 hover:bg-red-800 transition-all" id="nav-friends">
+                    <i data-lucide="users" class="w-6 h-6 md:w-7 md:h-7"></i><span class="font-bold hidden md:block text-base">Bạn Bè</span>
+                </button>
+                <button onclick="switchTab('mailbox')" class="w-full p-3 md:p-4 flex items-center justify-center md:justify-start gap-4 rounded-xl text-yellow-100 hover:bg-red-800 transition-all relative" id="nav-mailbox">
+                    <i data-lucide="mail" class="w-6 h-6 md:w-7 md:h-7"></i><span class="font-bold hidden md:block text-base">Hộp Thư</span>
+                    <span id="mail-badge" class="absolute top-2 right-2 md:right-4 w-3 h-3 bg-red-500 rounded-full hidden border-2 border-white animate-bounce"></span>
+                </button>
+            </nav>
+
+            <div class="mt-auto py-4 border-t border-yellow-500/20">
+                <div onclick="switchTab('profile')" class="flex items-center justify-center md:justify-start gap-3 cursor-pointer p-2 rounded-xl hover:bg-black/20">
+                    <img id="user-avatar" src="" class="w-10 h-10 rounded-full border-2 border-yellow-400">
+                    <div class="hidden md:block overflow-hidden text-left">
+                        <p id="user-name" class="text-xs font-black text-yellow-300 truncate">...</p>
+                        <p id="user-balance-display" class="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">---</p>
+                    </div>
+                </div>
+                <button id="btn-logout" class="mt-4 w-full flex items-center justify-center md:justify-start gap-4 p-3 md:p-4 text-red-400 hover:text-white hover:bg-red-900/50 rounded-xl transition-all font-black text-[10px] md:text-xs uppercase tracking-widest">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                    <span class="hidden md:block">Đăng Xuất</span>
+                </button>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col relative overflow-hidden">
+            <header class="h-16 md:h-20 flex items-center justify-between px-4 md:px-10 border-b border-yellow-500/20 bg-red-950/50">
+                <h1 class="text-xl md:text-2xl font-bold text-yellow-400 font-script md:hidden">Tết  Hub</h1>
+                <div class="hidden md:flex items-center gap-4 bg-black/40 px-6 py-2 rounded-full border border-yellow-500/30 text-yellow-200 w-full max-w-md">
+                    <i data-lucide="search" class="text-yellow-600 w-4 h-4"></i>
+                    <input type="text" placeholder="Tìm tên sòng bài..." class="bg-transparent border-none outline-none text-xs w-full">
+                </div>
+                <div class="bg-red-900 border border-yellow-500 px-4 py-1.5 rounded-full text-xs font-black text-yellow-400 shadow-lg">
+                    Bính Ngọ 2026 🏮
+                </div>
+            </header>
+
+            <div id="content-area" class="flex-1 p-4 md:p-10 overflow-y-auto custom-scrollbar">
+                
+                <div id="view-lobby" class="max-w-7xl mx-auto space-y-6 md:space-y-12">
+                    <div class="relative h-44 md:h-80 rounded-[2.5rem] md:rounded-[4rem] overflow-hidden border-2 md:border-4 border-yellow-500 shadow-2xl cursor-pointer" onclick="openRoomModal('Bầu Cua', 'fish', 'baucuatet.html')">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent"></div>
+                        <div class="absolute bottom-6 left-6 md:bottom-12 md:left-12 text-left">
+                            <h2 class="text-3xl md:text-7xl font-bold text-yellow-400 font-script">Bầu Cua Tôm Cá</h2>
+                            <p class="text-yellow-100 text-[10px] md:text-lg font-bold mt-2">Sòng bài uy tín tại Quảng Ngãi ! 🧧✨</p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col lg:flex-row gap-8">
+                        <div class="flex-1">
+                            <h3 class="text-2xl md:text-4xl font-bold text-yellow-400 font-script mb-6 text-left">Sảnh Online</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+                                <div class="bg-gradient-to-br from-red-900 to-red-950 p-6 md:p-8 rounded-[2rem] border-2 border-yellow-500 shadow-xl group cursor-pointer" onclick="openRoomModal('Bầu Cua', 'fish', 'baucuatet.html')">
+                                    <div class="flex justify-between items-start mb-4 md:mb-8 text-left">
+                                        <div class="w-12 h-12 md:w-16 md:h-16 bg-yellow-500 text-red-950 rounded-2xl flex items-center justify-center shadow-lg"><i data-lucide="fish" class="w-8 h-8 md:w-10 md:h-10"></i></div>
+                                        <span class="text-[9px] px-3 py-1 rounded-full bg-emerald-500 text-white font-black uppercase tracking-tighter shadow-sm">Online</span>
+                                    </div>
+                                    <h4 class="text-xl md:text-3xl font-bold text-yellow-400 font-script text-left">Bầu Cua</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="chat-widget" class="w-full lg:w-96 bg-red-950/50 border-2 border-yellow-500/30 rounded-[2.5rem] h-[400px] md:h-[600px] flex flex-col overflow-hidden backdrop-blur-md"></div>
+                    </div>
+                </div>
+
+                <div id="view-rank" class="hidden-force max-w-3xl mx-auto space-y-6">
+                    <h2 class="text-4xl md:text-6xl font-bold text-yellow-400 font-script text-center">Bảng Vàng Phú Hộ</h2>
+                    <div id="rank-list" class="space-y-3 md:space-y-4"></div>
+                </div>
+
+                <div id="view-friends" class="hidden-force max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
+                    <div class="bg-red-950/20 rounded-[2.5rem] border-2 border-yellow-900/30 p-6 md:p-8 flex flex-col h-[600px]">
+                        <h3 class="text-2xl font-bold text-yellow-200 mb-8 flex items-center gap-3 font-script text-left"><i data-lucide="heart" class="text-red-500 fill-red-500"></i> Hội Bạn Thân</h3>
+                        <div id="friends-list" class="flex-1 space-y-4 overflow-y-auto custom-scrollbar"></div>
+                    </div>
+                    <div class="bg-emerald-950/10 rounded-[2.5rem] border-2 border-emerald-900/30 p-6 md:p-8 flex flex-col h-[600px]">
+                        <h3 class="text-2xl font-bold text-emerald-200 mb-8 flex items-center gap-3 font-script text-left"><i data-lucide="globe"></i> Sảnh Chờ Online</h3>
+                        <div id="online-list" class="flex-1 space-y-4 overflow-y-auto custom-scrollbar"></div>
+                    </div>
+                </div>
+
+                <div id="view-mailbox" class="hidden-force max-w-2xl mx-auto space-y-6">
+                    <h2 class="text-4xl font-bold text-yellow-400 font-script text-center">Hộp Thư !!</h2>
+                    <div id="mailbox-list" class="bg-red-950/20 rounded-[2.5rem] border-2 border-yellow-900/50 p-6 space-y-4 h-[600px] overflow-y-auto custom-scrollbar"></div>
+                </div>
+
+                <div id="view-profile" class="hidden-force max-w-md mx-auto bg-red-950 p-10 rounded-[3rem] border-4 border-yellow-500 text-center shadow-2xl">
+                     <img id="profile-img-large" src="" class="w-32 h-32 rounded-full border-4 border-yellow-500 mx-auto mb-6 object-cover shadow-xl text-left">
+                     <label class="text-[10px] text-yellow-600 uppercase font-black block mb-4 text-center">Danh xưng đại gia</label>
+                     <input type="text" id="profile-name-input" class="bg-black/40 border-2 border-yellow-900 text-center font-bold text-xl text-white mb-8 outline-none w-full py-3 rounded-2xl">
+                     <button onclick="saveProfile()" class="w-full bg-emerald-600 py-4 rounded-2xl font-black text-white hover:bg-emerald-500 transition-all shadow-xl uppercase">Cập Nhật Hồ Sơ</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="room-modal" class="fixed inset-0 z-[60] bg-black/95 backdrop-blur-md hidden-force flex items-center justify-center p-4">
+        <div class="bg-[#2d0505] w-full max-w-4xl rounded-[2.5rem] md:rounded-[4rem] border-4 border-yellow-500 flex flex-col overflow-hidden">
+            <div class="p-6 md:p-10 border-b border-yellow-500/30 bg-red-950 flex items-center justify-between">
+                <h2 class="text-2xl md:text-4xl font-bold text-yellow-400 font-script" id="modal-title">Sòng Bài</h2>
+                <button onclick="closeRoomModal()"><i data-lucide="x-circle" class="w-10 h-10 text-yellow-600 hover:text-white transition-all"></i></button>
+            </div>
+            <div class="flex flex-col md:flex-row flex-1 overflow-hidden">
+                <div class="p-6 md:p-10 md:w-80 border-b md:border-b-0 md:border-r border-yellow-500/20 space-y-6 text-left">
+                    <div>
+                        <label class="text-[10px] text-yellow-600 font-black uppercase block mb-3">Tên sòng bài</label>
+                        <input type="text" id="input-room-name" placeholder="Vd: Sòng sếp FoxST..." class="w-full bg-black/40 border border-yellow-500/50 rounded-xl p-4 text-sm text-yellow-100 outline-none focus:border-yellow-400 font-bold">
+                    </div>
+                    <button onclick="createRoom()" class="w-full bg-yellow-500 text-red-950 font-black py-4 rounded-xl text-sm uppercase shadow-lg active:scale-95 transition-all">MỞ SÒNG NGAY</button>
+                </div>
+                <div class="p-6 md:p-10 flex-1 flex flex-col overflow-hidden text-left">
+                    <p class="text-[10px] md:text-xs font-black text-emerald-400 uppercase mb-4 tracking-widest">Sòng đang mở:</p>
+                    <div id="room-list-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto custom-scrollbar pr-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="private-chat-modal" class="fixed inset-0 z-[80] bg-black/98 hidden-force flex flex-col p-4 md:p-16">
+        <div class="max-w-3xl w-full mx-auto bg-red-950 rounded-[4rem] border-4 border-yellow-500 flex flex-col h-full overflow-hidden shadow-2xl">
+            <div class="p-8 bg-red-900/80 border-b-2 border-yellow-500/30 flex justify-between items-center text-left">
+                <div class="flex items-center gap-6">
+                    <img id="pchat-avatar" src="" class="w-16 h-16 rounded-full border-2 border-yellow-500 shadow-xl">
+                    <h3 id="pchat-name" class="font-black text-yellow-200 text-2xl font-script tracking-widest text-left">...</h3>
+                </div>
+                <button onclick="closePrivateChat()"><i data-lucide="x-circle" class="w-10 h-10 text-yellow-600 hover:text-white transition-all"></i></button>
+            </div>
+            <div id="pchat-messages" class="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar bg-black/20 text-left"></div>
+            <form id="pchat-form" class="p-6 bg-black/50 border-t-2 border-yellow-500/20 flex gap-4">
+                <input type="text" id="pchat-input" placeholder="Viết tin nhắn..." class="flex-1 bg-black/60 border-2 border-yellow-500/40 rounded-2xl px-6 py-4 text-yellow-100 outline-none text-base">
+                <button type="submit" class="bg-yellow-500 text-red-950 px-8 rounded-2xl font-black transition-all active:scale-90"><i data-lucide="send" class="w-6 h-6"></i></button>
+            </form>
+        </div>
+    </div>
+
+    <div id="game-frame-wrapper" class="fixed inset-0 z-[90] bg-black hidden-force flex flex-col">
+        <div class="h-14 md:h-16 bg-red-950 border-b-2 border-yellow-500 flex items-center px-4 md:px-8 justify-between shrink-0">
+            <button onclick="closeGame()" class="text-white text-[10px] md:text-xs font-black bg-red-800 px-4 py-2 rounded-xl border border-yellow-500 uppercase shadow-lg transition-all active:scale-90">THOÁT SÒNG</button>
+            <div id="active-game-title" class="font-bold text-yellow-400 text-sm md:text-2xl truncate px-4 font-script text-center flex-1 tracking-widest">Game</div>
+            <div class="text-emerald-400 text-[10px] md:text-xs font-black animate-pulse tracking-widest">LIVE 🔴</div>
+        </div>
+        <iframe id="game-iframe" src="" class="flex-1 w-full border-none shadow-inner" allow="autoplay; fullscreen"></iframe>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, query, orderBy, limit, addDoc, updateDoc, deleteDoc, deleteField, arrayUnion } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyArKIBD9RWIOhNgPrPLKtPHn1EsQUHjmE8",
+          authDomain: "score-57210.firebaseapp.com",
+          projectId: "score-57210",
+          storageBucket: "score-57210.firebasestorage.app",
+          messagingSenderId: "425618398285",
+          appId: "1:425618398285:web:47eccf49c844df2e865004"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const googleProvider = new GoogleAuthProvider();
+        const appId = 'tet-game-hub-2026';
+
+        let currentUser = null;
+        let currentTargetFile = '';
+        let currentRoomId = null;
+        let unsubPrivateChat = null;
+
+        onAuthStateChanged(auth, async (user) => {
+            document.getElementById('loading-screen').classList.add('hidden-force');
+            if (user) {
+                currentUser = user;
+                document.getElementById('login-screen').classList.add('hidden-force');
+                document.getElementById('app-container').classList.remove('hidden-force');
+                const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', user.uid);
+                onSnapshot(userRef, (snap) => {
+                    const data = snap.data() || { balance: 2026000 };
+                    const bEl = document.getElementById('user-balance-display');
+                    if(bEl) bEl.textContent = (data.balance ?? 2026000).toLocaleString('vi-VN') + ' 🪙';
+                    document.getElementById('user-avatar').src = user.photoURL;
+                    document.getElementById('profile-img-large').src = user.photoURL;
+                    document.getElementById('profile-name-input').value = user.displayName;
+                    const nameEl = document.getElementById('user-name'); if(nameEl) nameEl.textContent = user.displayName;
+                });
+                await setDoc(userRef, { name: user.displayName, photo: user.photoURL, lastActive: Date.now(), isAuth: true }, { merge: true });
+                initChat(); initRank(); initOnlinePresence(); initFriendsList(); initMailbox(); initBlossoms(); lucide.createIcons();
+            } else { 
+                document.getElementById('app-container').classList.add('hidden-force'); 
+                document.getElementById('login-screen').classList.remove('hidden-force'); 
+            }
+        });
+
+        document.getElementById('btn-login-google').onclick = () => signInWithPopup(auth, googleProvider);
+        document.getElementById('btn-logout').onclick = () => signOut(auth);
+
+        window.switchTab = (tab) => {
+            const views = ['view-lobby', 'view-rank', 'view-friends', 'view-profile', 'view-mailbox'];
+            views.forEach(v => document.getElementById(v)?.classList.add('hidden-force'));
+            document.getElementById(`view-${tab === 'home' ? 'lobby' : tab}`)?.classList.remove('hidden-force');
+            if(tab === 'mailbox') document.getElementById('mail-badge').classList.add('hidden');
+            lucide.createIcons();
+        };
+
+        function initRank() {
+            onSnapshot(query(collection(db, 'artifacts', appId, 'public', 'data', 'users'), orderBy('balance', 'desc'), limit(20)), (snap) => {
+                const users = snap.docs.map(d => d.data()).filter(u => u.isAuth);
+                document.getElementById('rank-list').innerHTML = users.map((u, i) => {
+                    const rankClass = i === 0 ? 'rank-gold' : (i === 1 ? 'rank-silver' : (i === 2 ? 'rank-bronze' : 'bg-black/50 border border-yellow-900/30'));
+                    return `
+                        <div class="flex items-center gap-4 md:gap-8 p-4 md:p-6 rounded-[1.5rem] md:rounded-[2.5rem] ${rankClass} shadow-xl transition-all hover:scale-[1.02] text-left">
+                            <div class="text-2xl md:text-4xl font-black w-8 md:w-12 text-center font-script">${i + 1}</div>
+                            <img src="${u.photo || ''}" class="w-10 h-10 md:w-16 md:h-16 rounded-full border-2 border-white/50 shadow-lg object-cover">
+                            <div class="flex-1 min-w-0">
+                                <p class="rank-name-font text-sm md:text-2xl truncate ${i < 3 ? '' : 'text-yellow-400'}">${u.name} ${i === 0 ? '👑' : ''}</p>
+                            </div>
+                            <div class="font-black text-sm md:text-3xl whitespace-nowrap">${(u.balance || 0).toLocaleString()} <span class="text-[10px] md:text-sm">🪙</span></div>
+                        </div>`;
+                }).join('');
+            });
+        }
+
+        window.openRoomModal = (game, icon, file) => {
+            currentTargetFile = file;
+            document.getElementById('modal-title').textContent = game;
+            document.getElementById('room-modal').classList.remove('hidden-force');
+            listenToRooms();
+        };
+
+        function listenToRooms() {
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'rooms'), (snap) => {
+                const rooms = snap.docs.map(d => d.data()).filter(r => r.gameType === currentTargetFile);
+                document.getElementById('room-list-container').innerHTML = rooms.map(r => {
+                    const pCount = r.players ? Object.keys(r.players).length : 1;
+                    return `<div class="bg-black/60 border border-yellow-500/50 p-4 rounded-2xl flex justify-between items-center shadow-lg text-left">
+                        <div class="text-left"><p class="font-black text-yellow-400 text-xs md:text-lg truncate w-32 md:w-full font-script text-left">${r.name}</p><p class="text-[9px] md:text-xs text-emerald-400 font-bold uppercase">${pCount}/${r.max} ĐẠI GIA</p></div>
+                        <button onclick="joinRoom('${r.id}', '${r.name}')" class="bg-yellow-500 text-red-950 px-6 py-2 rounded-xl font-black text-[10px] md:text-xs shadow-md">VÀO</button>
+                    </div>`;
+                }).join('') || '<p class="text-xs text-center py-10 opacity-50 uppercase font-black text-left">Chưa có sòng bài sếp ơi...</p>';
+                lucide.createIcons();
+            });
+        }
+
+        window.createRoom = async () => {
+            const inp = document.getElementById('input-room-name');
+            const name = inp.value.trim() || `Sòng sếp FoxST VIP`;
+            const id = 'room_' + Date.now();
+            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'rooms', id), { id, name, max: 10, gameType: currentTargetFile, hostId: currentUser.uid, status: 'betting', players: {[currentUser.uid]: {name: currentUser.displayName, id: currentUser.uid}} });
+            inp.value = '';
+            joinRoom(id, name);
+        };
+
+        window.joinRoom = (id, name) => {
+            currentRoomId = id; document.getElementById('room-modal').classList.add('hidden-force'); document.getElementById('game-frame-wrapper').classList.remove('hidden-force');
+            document.getElementById('active-game-title').textContent = name;
+            document.getElementById('game-iframe').src = `${currentTargetFile}?room=${id}&uid=${currentUser.uid}&name=${encodeURIComponent(currentUser.displayName)}`;
+        };
+
+        window.closeGame = async () => {
+            if(!confirm("Rời sòng giữa chừng lộc lá bay mất đó sếp, chắc chưa ạ? 🥺")) return;
+            const roomId = currentRoomId; const userUid = currentUser.uid;
+            if (roomId) {
+                const ref = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomId);
+                const snap = await getDoc(ref);
+                if (snap.exists()) {
+                    const data = snap.data();
+                    if (data.hostId === userUid || Object.keys(data.players || {}).length <= 1) { await deleteDoc(ref); } 
+                    else { await updateDoc(ref, { [`players.${userUid}`]: deleteField() }); }
+                }
+            }
+            document.getElementById('game-frame-wrapper').classList.add('hidden-force');
+            document.getElementById('game-iframe').src = '';
+            currentRoomId = null;
+        };
+
+        window.closeRoomModal = () => document.getElementById('room-modal').classList.add('hidden-force');
+
+        function initChat() {
+            const widget = document.getElementById('chat-widget'); if(!widget) return;
+            widget.innerHTML = `<div class="p-4 md:p-6 bg-red-900 border-b border-yellow-600 font-black text-yellow-400 text-xs md:text-sm uppercase text-center shadow-lg">Chat Sảnh </div><div id="chat-msgs" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 text-[11px] md:text-sm custom-scrollbar bg-black/20 text-left"></div><form id="chat-form" class="p-4 bg-black/50 flex gap-2"><input id="chat-input" class="flex-1 bg-black/50 rounded-xl px-4 py-2 text-xs md:text-sm outline-none text-yellow-100 border border-yellow-900 focus:border-yellow-400" placeholder="Chat..."><button type="submit" class="bg-yellow-600 px-4 rounded-xl shadow-lg"><i data-lucide="send" class="w-4 h-4 md:w-5 md:h-5"></i></button></form>`;
+            onSnapshot(query(collection(db, 'artifacts', appId, 'public', 'data', 'chat_global'), orderBy('createdAt', 'desc'), limit(30)), (snap) => {
+                const list = snap.docs.map(d => d.data()).reverse();
+                document.getElementById('chat-msgs').innerHTML = list.map(m => `<div class="text-left mb-1"><span class="font-black text-yellow-500 text-[10px] md:text-xs mr-2 uppercase tracking-tighter text-left">${m.user}:</span> <span class="text-yellow-50 font-bold leading-tight">${m.msg}</span></div>`).join('');
+                document.getElementById('chat-msgs').scrollTop = document.getElementById('chat-msgs').scrollHeight; lucide.createIcons();
+            });
+            document.getElementById('chat-form').onsubmit = async (e) => { e.preventDefault(); const inp = document.getElementById('chat-input'); const msg = inp.value.trim(); if(msg) { await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'chat_global'), { user: currentUser.displayName, msg, createdAt: Date.now(), isAuth: true }); inp.value = ''; } };
+        }
+
+        function initOnlinePresence() {
+    onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'online_users'), (snap) => {
+        const now = Date.now();
+        // Chỉ cho phép trễ tối đa 10 giây thôi sếp nhé!
+        const users = snap.docs.map(d => d.data()).filter(u => 
+            u.uid !== currentUser.uid && 
+            (now - u.lastActive < 10000) // 10 giây "vàng"
+        );
+        
+        document.getElementById('online-list').innerHTML = users.map(u => `
+            <div class="flex items-center justify-between p-4 bg-black/40 rounded-2xl border border-yellow-900/30 shadow-lg text-left">
+                <div class="flex items-center gap-4">
+                    <div class="relative">
+                        <img src="${u.photo}" class="w-10 h-10 rounded-full border-2 border-yellow-500 shadow-md">
+                        <span class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-red-950 rounded-full animate-pulse"></span>
+                    </div>
+                    <span class="text-sm font-bold text-yellow-100">${u.name}</span>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="sendFriendRequest('${u.uid}', '${u.name}')" class="text-yellow-500 p-2 hover:bg-yellow-500/10 rounded-lg"><i data-lucide="user-plus" class="w-5 h-5"></i></button>
+                    <button onclick="openPrivateChat('${u.uid}', '${u.name}', '${u.photo}')" class="text-yellow-500 p-2 hover:bg-yellow-500/10 rounded-lg"><i data-lucide="message-square" class="w-5 h-5"></i></button>
+                </div>
+            </div>`).join('');
+        lucide.createIcons();
+    });
+
+    // Cập nhật trạng thái liên tục mỗi 5 giây để server luôn biết sếp đang On
+    setInterval(() => { 
+        if(currentUser) {
+            setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'online_users', currentUser.uid), { 
+                uid: currentUser.uid, 
+                name: currentUser.displayName, 
+                photo: currentUser.photoURL, 
+                lastActive: Date.now() 
+            }, { merge: true }); 
+        }
+    }, 5000); 
+}
+
+        function initFriendsList() {
+            onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'users', currentUser.uid), (snap) => {
+                const friends = snap.data()?.friends || [];
+                document.getElementById('friends-list').innerHTML = friends.map(f => `<div class="flex items-center justify-between p-4 bg-red-950/40 rounded-2xl border border-yellow-500/20 text-left shadow-md"><div class="flex items-center gap-4"><img src="${f.photo}" class="w-10 h-10 rounded-full border border-yellow-500 shadow-sm"><span class="text-sm font-bold text-yellow-100">${f.name}</span></div><button onclick="openPrivateChat('${f.uid}', '${f.name}', '${f.photo}')" class="bg-yellow-600 text-red-950 text-[10px] font-black px-4 py-1.5 rounded-xl uppercase shadow-md active:scale-95 transition-all">Chat</button></div>`).join('') || '<p class="text-center text-gray-700 py-32 text-xs font-black uppercase">Trống...</p>';
+            });
+        }
+
+        function initMailbox() {
+            onSnapshot(query(collection(db, 'artifacts', appId, 'public', 'data', 'mailboxes', currentUser.uid, 'mails'), orderBy('createdAt', 'desc'), limit(20)), (snap) => {
+                const mails = snap.docs.map(d => ({...d.data(), id: d.id}));
+                if (mails.length > 0) {
+                    document.getElementById('mail-badge').classList.remove('hidden');
+                    document.getElementById('mailbox-list').innerHTML = mails.map(m => `<div class="bg-red-950/80 p-6 rounded-[2rem] border-2 border-yellow-600/30 flex flex-col gap-4 text-left shadow-xl"><div class="flex items-center gap-4 text-left"><div class="w-12 h-12 bg-yellow-500 rounded-2xl flex items-center justify-center text-red-950 shadow-lg"><i data-lucide="${m.type === 'FRIEND_REQUEST' ? 'user-plus' : 'message-circle'}"></i></div><div class="flex-1"><p class="font-black text-yellow-500 text-[10px] uppercase mb-1 tracking-widest text-left">${m.type === 'FRIEND_REQUEST' ? 'HÀO HỮU' : 'TIN NHẮN'}</p><p class="text-sm text-yellow-50 font-bold leading-tight text-left"><b>${m.fromName}</b> vừa gửi thư...</p></div></div><div class="flex gap-4">${m.type === 'FRIEND_REQUEST' ? `<button onclick="handleFriendRequest('${m.id}', '${m.fromUid}', true)" class="flex-1 bg-emerald-600 py-3 rounded-xl text-xs font-black shadow-lg">CHẤP NHẬN</button><button onclick="handleFriendRequest('${m.id}', '${m.fromUid}', false)" class="flex-1 bg-black/40 py-3 rounded-xl text-xs font-black shadow-lg">TỪ CHỐI</button>` : `<button onclick="openPrivateChat('${m.fromUid}', '${m.fromName}', '${m.fromPhoto}')" class="flex-1 bg-yellow-500 py-3 rounded-xl text-xs font-black text-red-950 shadow-lg uppercase">XEM TIN</button>`}</div></div>`).join('');
+                } else { document.getElementById('mailbox-list').innerHTML = '<p class="text-center text-gray-700 py-40 uppercase font-black text-xs tracking-widest text-center">Hộp thư trống...</p>'; }
+                lucide.createIcons();
+            });
+        }
+
+        window.handleFriendRequest = async (mailId, fromUid, accept) => {
+            const mailRef = doc(db, 'artifacts', appId, 'public', 'data', 'mailboxes', currentUser.uid, 'mails', mailId);
+            if (accept) {
+                const senderSnap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', fromUid));
+                const senderData = senderSnap.data();
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', currentUser.uid), { friends: arrayUnion({ uid: fromUid, name: senderData.name, photo: senderData.photo }) });
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', fromUid), { friends: arrayUnion({ uid: currentUser.uid, name: currentUser.displayName, photo: currentUser.photoURL }) });
+                alert("Đã thành hảo hữu! ✨");
+            }
+            await deleteDoc(mailRef);
+        };
+
+        window.sendFriendRequest = async (targetUid, targetName) => {
+            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'mailboxes', targetUid, 'mails'), { type: 'FRIEND_REQUEST', fromUid: currentUser.uid, fromName: currentUser.displayName, createdAt: Date.now() });
+            alert(`Đã gửi thư tới ${targetName}!`);
+        };
+
+        window.openPrivateChat = (uid, name, photo) => {
+            document.getElementById('pchat-name').textContent = name; document.getElementById('pchat-avatar').src = photo; document.getElementById('private-chat-modal').classList.remove('hidden-force');
+            const chatId = [currentUser.uid, uid].sort().join('_'); if(unsubPrivateChat) unsubPrivateChat();
+            unsubPrivateChat = onSnapshot(query(collection(db, 'artifacts', appId, 'public', 'data', 'private_chats', chatId, 'messages'), orderBy('time', 'asc'), limit(50)), (snap) => {
+                document.getElementById('pchat-messages').innerHTML = snap.docs.map(d => { const m = d.data(); const isMe = m.sender === currentUser.uid; return `<div class="flex ${isMe ? 'justify-end' : 'justify-start'}"><span class="px-6 py-3 rounded-[2rem] text-sm font-bold shadow-xl ${isMe ? 'bg-yellow-500 text-red-950' : 'bg-red-900 text-yellow-50 border border-yellow-500/20'}">${m.text}</span></div>`; }).join('');
+                document.getElementById('pchat-messages').scrollTop = document.getElementById('pchat-messages').scrollHeight;
+            });
+            document.getElementById('pchat-form').onsubmit = async (e) => { e.preventDefault(); const inp = document.getElementById('pchat-input'); const text = inp.value.trim(); if(text) { await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'private_chats', chatId, 'messages'), { sender: currentUser.uid, text, time: Date.now() }); await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'mailboxes', uid, 'mails'), { type: 'MSG', fromUid: currentUser.uid, fromName: currentUser.displayName, fromPhoto: currentUser.photoURL, createdAt: Date.now() }); inp.value = ''; } };
+        };
+
+        window.closePrivateChat = () => { document.getElementById('private-chat-modal').classList.add('hidden-force'); if(unsubPrivateChat) unsubPrivateChat(); };
+        window.closeRoomModal = () => document.getElementById('room-modal').classList.add('hidden-force');
+        window.saveProfile = async () => { const newName = document.getElementById('profile-name-input').value.trim(); if(newName) { await updateProfile(auth.currentUser, { displayName: newName }); await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', currentUser.uid), { name: newName }); alert("Đã xong sếp ơi! ❤️"); } };
+
+        function initBlossoms() {
+            const container = document.getElementById('blossom-container');
+            const items = ['🌸', '🧧', '🏮', '✨'];
+            for (let i = 0; i < 25; i++) {
+                const b = document.createElement('div'); b.className = 'blossom'; b.textContent = items[Math.floor(Math.random() * items.length)];
+                b.style.left = Math.random() * 100 + 'vw'; b.style.fontSize = Math.random() * 15 + 15 + 'px';
+                b.style.animationDuration = Math.random() * 6 + 5 + 's'; b.style.animationDelay = Math.random() * 5 + 's';
+                container.appendChild(b);
+            }
+        }
+    </script>
+</body>
+</html>
