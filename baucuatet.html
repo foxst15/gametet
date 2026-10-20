@@ -230,12 +230,17 @@
             }, 3000);
         };
 
-        // KHOỞI TẠO AGORA VOICE CHAT
+        // KHOỞI TẠO AGORA VOICE CHAT VỚI TOKEN
         async function initVoiceChat() {
             try {
                 rtc.client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
-                // SẾP NHỚ THAY "APP_ID_AGORA_CỦA_SẾP_VÀO_ĐÂY" BẰNG MÃ AGORA CỦA MÌNH NHA!
-                await rtc.client.join("17f3ce874c514b0b9f36e53977ebba97", ROOM_ID, null, USER_ID);
+                
+                // --- SẾP NHỚ ĐIỀN THÔNG TIN VÀO 2 DÒNG DƯỚI ĐÂY NHA ---
+                const APP_ID = "0c54aa6d55aa4b1391e97e64457f1481"; 
+                const CHANNEL_NAME = "phong_vip";
+                const TOKEN = "007eJxTYEj2ZFKO1z36qEeJc+VFJ5E31zauYd39biLrDBeVVwliU3YpMBgkm5okJpqlmJomJpokGRpbGqZamqeamZiYmqcZmlgY2jVez2oIZGQIX1HBxMgAgSA+J0NBRn5eenxZZgEDAwB/ZiAx";
+                
+                await rtc.client.join(APP_ID, CHANNEL_NAME, TOKEN, USER_ID);
                 
                 rtc.client.on("user-published", async (user, mediaType) => {
                     await rtc.client.subscribe(user, mediaType);
@@ -248,6 +253,7 @@
             }
         }
 
+        // BẬT / TẮT MIC & SỬA LỖI SVG CLASSSNAME
         window.toggleMic = async () => {
             if (!rtc.client) return window.showToast("Đang kết nối Server Voice, chờ xíu nha sếp!", "info");
             
@@ -262,7 +268,9 @@
                 
                 const micIcon = document.getElementById('mic-icon');
                 micIcon.setAttribute('data-lucide', isMicOn ? 'mic' : 'mic-off');
-                micIcon.className = isMicOn ? 'w-5 h-5 text-emerald-300' : 'w-5 h-5 text-gray-400';
+                // Sửa lỗi SVG ở đây nà
+                micIcon.setAttribute('class', isMicOn ? 'w-5 h-5 text-emerald-300' : 'w-5 h-5 text-gray-400');
+                
                 lucide.createIcons();
                 window.showToast(isMicOn ? "Đã bật mic nà! 🎤" : "Đã tắt mic!", isMicOn ? 'success' : 'info');
             } catch (err) {
@@ -592,7 +600,7 @@
         function renderChat(msgs) {
             ui.chatList.innerHTML = msgs.map(m => {
                 const isMe = m.uid === USER_ID;
-                return `<div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} animate-fade-in"><div class="max-w-[85%]">${!isMe ? `<div class="text-[9px] text-gray-400 mb-0.5 ml-1">${m.user}</div>` : ''}<div class="px-3 py-2 rounded-2xl text-xs break-words ${isMe ? 'bg-yellow-600 text-white rounded-tr-none' : 'bg-gray-800 text-gray-200 rounded-tl-none border border-gray-700'}">${m.text}</div></div></div>`;
+                return `<div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} animate-fade-in"><div class="max-w-[85%]">${!isMe ? `<div class="text-[9px] text-gray-400 mb-0.5 ml-1">\${m.user}</div>` : ''}<div class="px-3 py-2 rounded-2xl text-xs break-words ${isMe ? 'bg-yellow-600 text-white rounded-tr-none' : 'bg-gray-800 text-gray-200 rounded-tl-none border border-gray-700'}">${m.text}</div></div></div>`;
             }).join('');
             if(isChatOpen) ui.chatList.scrollTop = ui.chatList.scrollHeight;
             else if (msgs.length > 0) ui.chatNotify.classList.remove('hidden');
@@ -635,7 +643,7 @@
                     <div class="bg-red-950/40 backdrop-blur-sm border-2 ${myBets[item.id] > 0 ? 'border-yellow-400 bg-red-800/60' : 'border-yellow-700/30'} rounded-2xl p-2 md:p-4 flex flex-col items-center shadow-lg h-24 md:h-32 justify-center transition-all">
                         <span class="text-4xl md:text-6xl filter drop-shadow-md group-hover:scale-110 transition-transform">${item.icon}</span>
                         <span class="text-xs md:text-[11px] font-bold text-yellow-100/60 uppercase mt-1">${item.name}</span>
-                        ${myBets[item.id] > 0 ? `<div class="absolute -top-1 -right-1 bg-yellow-500 text-red-950 font-bold px-2 py-0.5 rounded-full text-[9px] shadow-lg animate-bounce border border-white">${formatMoney(myBets[item.id])}</div>` : ''}
+                        ${myBets[item.id] > 0 ? `<div class="absolute -top-1 -right-1 bg-yellow-500 text-red-950 font-bold px-2 py-0.5 rounded-full text-[9px] shadow-lg animate-bounce border border-white">\${formatMoney(myBets[item.id])}</div>` : ''}
                         <div id="badge-${item.id}" class="absolute bottom-1 right-1 bg-black/60 text-emerald-400 text-[8px] px-1.5 rounded-full hidden">0</div>
                     </div>
                 </div>`).join('');
