@@ -3,10 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bầu Cua Tết 2026 - Sòng Bài VIP 10 Người</title>
+    <title>Bầu Cua Tết 2026 - Sòng Bài VIP</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <!-- THÊM AGORA SDK VÀO ĐÂY CHO VIỆC VOICE CHAT NÀ CHỦ NHÂN! -->
+    <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js"></script>
+
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@500;600;700&display=swap&subset=vietnamese" rel="stylesheet">
     <style>
         .font-script { font-family: 'Dancing Script', cursive; }
@@ -38,7 +42,6 @@
 </head>
 <body class="bg-gradient-to-br from-red-900 via-[#5c0a0a] to-red-950 text-yellow-50 h-screen flex flex-col overflow-hidden relative bg-pattern">
     
-    
     <div id="blossoms" class="absolute inset-0 pointer-events-none z-0 overflow-hidden"></div>
 
     <div id="toast-container" class="fixed top-20 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 pointer-events-none w-[90%] md:w-auto items-center"></div>
@@ -62,6 +65,12 @@
                 <i data-lucide="coins" class="text-yellow-400 w-4 h-4"></i>
                 <span id="balance-display" class="font-bold text-yellow-300 font-mono text-sm md:text-base">...</span>
             </div>
+            
+            <!-- NÚT BẬT MIC CHẾ ĐỘ VOICE CHAT -->
+            <button id="btn-mic" onclick="toggleMic()" class="relative p-2 bg-yellow-600/20 hover:bg-yellow-600/40 rounded-full border border-yellow-600/40 transition-all">
+                <i data-lucide="mic-off" id="mic-icon" class="w-5 h-5 text-gray-400"></i>
+            </button>
+
             <button onclick="toggleChat()" class="relative p-2 bg-yellow-600/20 hover:bg-yellow-600/40 rounded-full border border-yellow-600/40 transition-all">
                 <i data-lucide="message-circle" class="w-5 h-5 text-yellow-200"></i>
                 <span id="chat-notification" class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[10px] flex items-center justify-center font-bold hidden border border-white">!</span>
@@ -169,6 +178,10 @@
         let isShaking = false;
         let isChatOpen = false;
         let previousPlayers = {}; 
+        
+        // AGORA STATE
+        let rtc = { localAudioTrack: null, client: null };
+        let isMicOn = false;
 
         const ui = {
             balance: document.getElementById('balance-display'),
@@ -217,13 +230,52 @@
             }, 3000);
         };
 
-        // --- BÉ LÔI ĐÃ FIX: CHUYỂN LOGIC LẤY TIỀN VÀO TRONG startListeners ---
+        // KHOỞI TẠO AGORA VOICE CHAT
+        async function initVoiceChat() {
+            try {
+                rtc.client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+                // SẾP NHỚ THAY "APP_ID_AGORA_CỦA_SẾP_VÀO_ĐÂY" BẰNG MÃ AGORA CỦA MÌNH NHA!
+                await rtc.client.join("17f3ce874c514b0b9f36e53977ebba97", ROOM_ID, null, USER_ID);
+                
+                rtc.client.on("user-published", async (user, mediaType) => {
+                    await rtc.client.subscribe(user, mediaType);
+                    if (mediaType === "audio") {
+                        user.audioTrack.play();
+                    }
+                });
+            } catch (err) {
+                console.error("Agora bị xíu lỗi gòi sếp:", err);
+            }
+        }
+
+        window.toggleMic = async () => {
+            if (!rtc.client) return window.showToast("Đang kết nối Server Voice, chờ xíu nha sếp!", "info");
+            
+            try {
+                if (!rtc.localAudioTrack) {
+                    rtc.localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+                    await rtc.client.publish([rtc.localAudioTrack]);
+                }
+                
+                isMicOn = !isMicOn;
+                rtc.localAudioTrack.setMuted(!isMicOn);
+                
+                const micIcon = document.getElementById('mic-icon');
+                micIcon.setAttribute('data-lucide', isMicOn ? 'mic' : 'mic-off');
+                micIcon.className = isMicOn ? 'w-5 h-5 text-emerald-300' : 'w-5 h-5 text-gray-400';
+                lucide.createIcons();
+                window.showToast(isMicOn ? "Đã bật mic nà! 🎤" : "Đã tắt mic!", isMicOn ? 'success' : 'info');
+            } catch (err) {
+                window.showToast("Cấp quyền mic cho web đi sếp ơi!", "danger");
+                console.error(err);
+            }
+        };
+
         async function init() {
             ui.roomInfo.textContent = `Phòng: ${ROOM_NAME}`;
             renderGrid();
             lucide.createIcons();
 
-            // Đăng nhập ẨN DANH để kết nối Database
             try {
                 await setPersistence(auth, inMemoryPersistence);
                 if (!auth.currentUser) {
@@ -236,6 +288,7 @@
             onAuthStateChanged(auth, (user) => {
                 if (user) {
                     startListeners();
+                    initVoiceChat(); // Gọi Voice chat sau khi Auth thành công!
                 }
             });
         }
@@ -246,7 +299,6 @@
                 return;
             }
 
-            // --- BÉ LÔI FIX: LẤY TIỀN KHI ĐÃ ĐĂNG NHẬP THÀNH CÔNG ---
             if (USER_ID) {
                 const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', USER_ID);
                 onSnapshot(userRef, (snap) => {
@@ -254,16 +306,13 @@
                         balance = snap.data().balance || 2026000;
                         ui.balance.textContent = formatMoney(balance);
                     } else {
-                        // Nếu chưa có user thì set mặc định 2 triệu
                         balance = 2026000;
                         ui.balance.textContent = formatMoney(balance);
                     }
                 }, (error) => {
-                    // Nếu lỗi permission (do logout/login chưa kịp), ta ignore hoặc log nhẹ
                     console.log("Đang chờ xác thực ví tiền...");
                 });
             }
-            // -----------------------------------------------------------
 
             const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', ROOM_ID);
             const chatRef = collection(db, 'artifacts', appId, 'public', 'data', 'chats_' + ROOM_ID);
@@ -294,6 +343,7 @@
             const roomData = {
                 hostId: USER_ID, 
                 status: 'betting', 
+                mode: 'normal',
                 dice: ['nai', 'bau', 'ga'],
                 totalBets: { nai: 0, bau: 0, ga: 0, ca: 0, cua: 0, tom: 0 },
                 players: { [USER_ID]: { name: USER_NAME, isReady: false, time: Date.now() } },
@@ -306,6 +356,7 @@
         function handleUpdate(data) {
             state = data;
             const currentPlayers = data.players || {};
+            const roomMode = data.mode || 'normal'; 
 
             if (data.hostId && !currentPlayers[data.hostId] && Object.keys(currentPlayers).length > 0) {
                 const newHostId = Object.keys(currentPlayers)[0];
@@ -326,7 +377,7 @@
             }
             previousPlayers = { ...currentPlayers };
 
-            const maxPlayers = data.max || 10;
+            const maxPlayers = data.max || (roomMode === 'pk' ? 2 : 10);
             if (USER_ID && !currentPlayers[USER_ID]) {
                 const currentCount = Object.keys(currentPlayers).length;
                 if (currentCount < maxPlayers) {
@@ -347,7 +398,9 @@
                     const p = currentPlayers[uid]; if(uid === USER_ID) return '';
                     return `<div class="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] border ${p.isReady ? 'bg-emerald-900 border-emerald-500 text-emerald-300' : 'bg-gray-800 border-gray-600 text-gray-400'}"><span>${p.name}</span>${p.isReady ? '✅' : '⏳'}</div>`;
                 }).join('');
-                ui.bowl.onclick = startShake;
+                
+                // Ở chế độ PK không cho bấm Bát nữa để máy tự xóc
+                ui.bowl.onclick = roomMode === 'pk' ? null : startShake;
             } else {
                 ui.hostMonitor.classList.add('hidden');
                 ui.bowl.onclick = null;
@@ -355,21 +408,33 @@
 
             if (totalPlayers > 1) {
                 ui.readyBadge.classList.remove('hidden');
-                ui.readyText.textContent = `${readyCount}/${totalPlayers - (isHost ? 1 : 0)} Sẵn sàng`;
+                // Nếu PK thì tính cả 2 người, normal thì không tính cái
+                const requiredReady = roomMode === 'pk' ? totalPlayers : (totalPlayers - 1);
+                ui.readyText.textContent = `${readyCount}/${requiredReady} Sẵn sàng`;
             } else {
                 ui.readyBadge.classList.add('hidden');
             }
 
             if (data.status === 'betting') {
-    isShaking = false; // <-- THÊM DÒNG NÀY ĐỂ RESET TRẠNG THÁI XÓC
-    const me = currentPlayers[USER_ID];
-    isMyReady = me ? me.isReady : false;
-    
-    toggleLockUI(isMyReady || isSpectator);
+                isShaking = false; 
+                const me = currentPlayers[USER_ID];
+                isMyReady = me ? me.isReady : false;
                 
+                toggleLockUI(isMyReady || isSpectator);
+                            
                 if (isHost) {
-                    const everyoneReady = (totalPlayers > 1 && readyCount >= (totalPlayers - 1));
-                    ui.status.textContent = everyoneReady ? "Cả làng sẵn sàng rồi! Bấm Bát để xóc!" : "Đợi mọi người cược xong...";
+                    const everyoneReady = (totalPlayers > 1 && readyCount >= (roomMode === 'pk' ? totalPlayers : (totalPlayers - 1)));
+                    
+                    // --- AUTO XÓC CHO CHẾ ĐỘ PK ---
+                    if (roomMode === 'pk' && totalPlayers === 2 && readyCount === 2) {
+                        ui.status.textContent = "Hai bên đã vào thế! Hệ thống chuẩn bị xóc PK...";
+                        if (!isShaking) {
+                            isShaking = true;
+                            setTimeout(() => startShake(), 1500); 
+                        }
+                    } else {
+                        ui.status.textContent = everyoneReady ? "Cả làng sẵn sàng rồi! Bấm Bát để xóc!" : "Đợi mọi người cược xong...";
+                    }
                 } else if (isSpectator) {
                     ui.status.textContent = `Sòng đã đầy (${maxPlayers}/${maxPlayers})! Chủ nhân xem chùa đi nha 👀`;
                 } else {
@@ -416,7 +481,7 @@
         };
 
         window.toggleReady = async () => {
-            if (!USER_ID || isHost || state?.status !== 'betting' || isMyReady) return;
+            if (!USER_ID || state?.status !== 'betting' || isMyReady) return;
             if (!state?.players?.[USER_ID]) return window.showToast("Chủ nhân xem chùa thì cần gì bấm Sẵn sàng nè! 👀", "danger");
             
             const total = Object.values(myBets).reduce((a,b)=>a+b,0);
@@ -513,11 +578,12 @@
 
         window.closeResult = () => { ui.modal.classList.add('hidden'); ui.modalContent.classList.add('scale-90'); if (state?.status === 'betting') resetLocalRound(); };
         function resetLocalRound() { 
-    isShaking = false; // <-- Đảm bảo dòng này có mặt
-    isMyReady = false; 
-    myBets = { nai: 0, bau: 0, ga: 0, ca: 0, cua: 0, tom: 0 }; 
-    renderGrid(); 
-}
+            isShaking = false; 
+            isMyReady = false; 
+            myBets = { nai: 0, bau: 0, ga: 0, ca: 0, cua: 0, tom: 0 }; 
+            renderGrid(); 
+        }
+        
         window.toggleChat = () => {
             isChatOpen = !isChatOpen; ui.chatDrawer.classList.toggle('translate-x-full', !isChatOpen); ui.chatBackdrop.classList.toggle('hidden', !isChatOpen);
             if(isChatOpen) { ui.chatNotify.classList.add('hidden'); setTimeout(() => ui.chatList.scrollTop = ui.chatList.scrollHeight, 300); }
@@ -569,7 +635,7 @@
                     <div class="bg-red-950/40 backdrop-blur-sm border-2 ${myBets[item.id] > 0 ? 'border-yellow-400 bg-red-800/60' : 'border-yellow-700/30'} rounded-2xl p-2 md:p-4 flex flex-col items-center shadow-lg h-24 md:h-32 justify-center transition-all">
                         <span class="text-4xl md:text-6xl filter drop-shadow-md group-hover:scale-110 transition-transform">${item.icon}</span>
                         <span class="text-xs md:text-[11px] font-bold text-yellow-100/60 uppercase mt-1">${item.name}</span>
-                        ${myBets[item.id] > 0 ? `<div class="absolute -top-1 -right-1 bg-yellow-500 text-red-900 font-bold px-2 py-0.5 rounded-full text-[9px] shadow-lg animate-bounce border border-white">${formatMoney(myBets[item.id])}</div>` : ''}
+                        ${myBets[item.id] > 0 ? `<div class="absolute -top-1 -right-1 bg-yellow-500 text-red-950 font-bold px-2 py-0.5 rounded-full text-[9px] shadow-lg animate-bounce border border-white">${formatMoney(myBets[item.id])}</div>` : ''}
                         <div id="badge-${item.id}" class="absolute bottom-1 right-1 bg-black/60 text-emerald-400 text-[8px] px-1.5 rounded-full hidden">0</div>
                     </div>
                 </div>`).join('');
